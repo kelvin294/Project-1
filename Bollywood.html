@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Bollywood Movies – OASIS</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+
+body {
+
+background-color: black;
+
+color: white;
+
+font-family: Arial, sans-serif;
+
+margin: 0;
+
+padding: 0;
+
+}
+
+header {
+
+background-color: #111;
+
+padding: 10px;
+
+text-align: center;
+
+position: sticky;
+
+top: 0;
+
+z-index: 10;
+
+}
+
+input[type="text"] {
+
+width: 60%;
+
+padding: 10px;
+
+border-radius: 5px;
+
+border: none;
+
+outline: none;
+
+font-size: 16px;
+
+}
+
+button {
+
+padding: 10px 15px;
+
+margin-left: 10px;
+
+border: none;
+
+border-radius: 5px;
+
+background-color: crimson;
+
+color: white;
+
+cursor: pointer;
+
+}
+
+.movies-container {
+
+display: grid;
+
+grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+
+gap: 15px;
+
+padding: 20px;
+
+}
+
+.movie {
+
+background-color: #222;
+
+border-radius: 10px;
+
+overflow: hidden;
+
+text-align: center;
+
+transition: transform 0.2s;
+
+position: relative;
+
+}
+
+.movie:hover {
+
+transform: scale(1.05);
+
+}
+
+.movie img {
+
+width: 100%;
+
+height: 220px;
+
+object-fit: cover;
+
+cursor: pointer;
+
+}
+
+.movie-title {
+
+padding: 10px;
+
+font-size: 14px;
+
+}
+
+.download-btn {
+
+background-color: green;
+
+color: white;
+
+padding: 5px 10px;
+
+border: none;
+
+border-radius: 0 0 10px 10px;
+
+width: 100%;
+
+cursor: pointer;
+
+font-size: 14px;
+
+}
+
+.highlight {
+
+outline: 3px solid yellow;
+
+}
+
+#unavailablePopup {
+
+display: none;
+
+position: fixed;
+
+top: 50%;
+
+left: 50%;
+
+transform: translate(-50%, -50%);
+
+background: #111;
+
+color: white;
+
+padding: 20px;
+
+border-radius: 12px;
+
+z-index: 9999;
+
+text-align: center;
+
+width: 300px;
+
+box-shadow: 0 0 20px rgba(255,255,255,0.2);
+
+}
+
+#unavailableMessage {
+
+font-size: 14px;
+
+}
+
+@media (max-width: 768px) {
+
+input[type="text"] {
+
+width: 100%;
+
+margin-bottom: 10px;
+
+}
+
+.movies-container {
+
+grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+
+}
+
+.movie img {
+
+height: 180px;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<input type="text" id="searchInput" placeholder="Search Bollywood movie..." />
+
+<button onclick="searchMovie()">Search</button>
+
+</header>
+
+<div id="unavailablePopup">
+
+<p id="unavailableMessage"></p>
+
+<button onclick="closeUnavailable()">Close</button>
+
+</div>
+
+<div class="movies-container" id="moviesContainer"></div>
+
+<script>
+
+const container = document.getElementById('moviesContainer');
+
+const movieList = {
+
+"RRR": { year: "2022", link: "download.php?movie=RRR" },
+
+"Jawan": { year: "2023", link: "download.php?movie=Jawan" },
+
+"Pathaan": { year: "2023", link: "download.php?movie=Pathaan" },
+
+"Animal": { year: "2023", link: "download.php?movie=Animal" },
+
+" Bhakshak   ": { year: " 2024", link: "download.php?movie=Bhakshak  " },
+
+"    Dunki ": { year: " 2023 ", link: "download.php?movie= Dunki " },
+
+"  Fighter   ": { year: "2024 ", link: "download.php?movie= Fighter " },
+
+"   Gadar: The Katha Continues  ": { year: "(2023) ", link: "download.php?movie= Gadar: The Katha Continues " },
+
+"  Ganapath  ": { year: "2023", link: "download.php?movie= Ganapath" },
+
+"   Goodbye ": { year: "  2022", link: "download.php?movie=Goodbye " },
+
+"  Kuttey (  ": { year: " 2023", link: "download.php?movie=Kuttey"},
+
+" Rocky Aur Rani Kii Prem Kahaani    ": { year: "(2023) ", link: "download.php?movie=Rocky Aur Rani Kii Prem Kahaani" },
+
+" OMG: O Manchi Ghost    ": { year: "(2024) ", link: "download.php?movie= OMG: O Manchi Ghost   " },
+
+"  OMG 2   ": { year: "2023", link: "download.php?movie=OMG 2  " },
+
+"  OMG: Oh My God  ": { year: "2012 ", link: "download.php?movie=OMG: Oh My God   " },
+
+"  Mission Majn  ": { year: " 2023", link: "download.php?movie=  Mission Majn " },
+
+"  Satyaprem Ki Katha  ": { year: "2023 ", link: "download.php?movie= Satyaprem Ki Katha  " },
+
+"   Shehzada  ": { year: " 2023", link: "download.php?movie= Shehzada " },
+
+"  Zara Hatke Zara Bachk  ": { year: "2023 ", link: "download.php?movie=Zara Hatke Zara Bachk  " }
+
+
+};
+
+const displayed = new Set();
+
+const tmdbKey = ['b49', '2cc', 'c66', '9864', 'b0f4', 'df2a', 'afe0', '485b', '8af'].join('');
+
+
+async function fetchValidPosters() {
+
+for (const title in movieList) {
+
+const data = await fetchTMDbData(title); // Fetch year + poster from TMDb
+
+const uniqueID = `${title.toLowerCase()}_${data.year}`;
+
+if (!displayed.has(uniqueID)) {
+
+displayed.add(uniqueID);
+
+addMovieToDOM(title, data.year, data.poster);
+
+}
+
+}
+
+}
+
+async function fetchTMDbData(title) {
+
+const url = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&query=${encodeURIComponent(title)}`;
+
+try {
+
+const res = await fetch(url);
+
+const data = await res.json();
+
+if (data.results && data.results.length > 0) {
+
+const match = data.results[0];
+
+const year = match.release_date ? match.release_date.split("-")[0] : "N/A";
+
+const poster = match.poster_path
+
+? `https://image.tmdb.org/t/p/w500${match.poster_path}`
+
+: "https://via.placeholder.com/300x450?text=No+Image";
+
+return { poster, year };
+
+}
+
+} catch (e) {
+
+console.error(e);
+
+}
+
+return { poster: "https://via.placeholder.com/300x450?text=No+Image", year: "N/A" };
+
+}
+
+function addMovieToDOM(title, year, poster) {
+
+const div = document.createElement('div');
+
+div.className = 'movie';
+
+div.setAttribute('data-title', title.toLowerCase());
+
+// Add year to movie name in URL
+
+const downloadUrl = `download.php?movie=${encodeURIComponent(title)}%20(${year})`;
+
+div.innerHTML = `
+
+<img src="${poster}" alt="${title}">
+
+<div class="movie-title">${title}${year !== "N/A" ? ` (${year})` : ""}</div>
+
+<button class="download-btn" onclick="window.location.href='${downloadUrl}'">
+
+</i> Download
+
+</button>
+
+`;
+
+container.appendChild(div);
+
+}
+
+function searchMovie() {
+
+const inputRaw = document.getElementById("searchInput").value.trim();
+
+const input = inputRaw.toLowerCase();
+
+const movieDivs = document.querySelectorAll(".movie");
+
+let found = false;
+
+movieDivs.forEach(div => div.classList.remove("highlight"));
+
+for (const div of movieDivs) {
+
+const title = div.getAttribute("data-title")?.trim().toLowerCase();
+
+if (title === input || title.includes(input)) {
+
+div.scrollIntoView({ behavior: "smooth", block: "center" });
+
+div.classList.add("highlight");
+
+setTimeout(() => div.classList.remove("highlight"), 3000);
+
+found = true;
+
+break;
+
+}
+
+}
+
+if (!found) {
+
+document.getElementById("unavailableMessage").innerHTML =
+
+`"${inputRaw}" is not available.<br>Use the message icon to request it.`;
+
+document.getElementById("unavailablePopup").style.display = "block";
+
+}
+
+}
+function closeUnavailable() {
+
+document.getElementById("unavailablePopup").style.display = "none";
+
+}
+
+document.getElementById("searchInput").addEventListener("keydown", function (e) {
+
+if (e.key === "Enter") {
+
+e.preventDefault();
+
+searchMovie();
+
+}
+
+});
+
+fetchValidPosters();
+
+</script>
+
+</body>
+
+</html>
