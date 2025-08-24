@@ -1,0 +1,41 @@
+{
+
+"name": "Oasis Movies",
+
+"short_name": "Oasis",
+
+"start_url": "/index.html",
+
+"display": "standalone",
+
+"background_color": "#000000",
+
+"theme_color": "#000000",
+
+"orientation": "portrait",
+
+"icons": [
+
+{
+
+"src": "icon-192x192.webp",
+
+"sizes": "1024x1024",
+
+"type": "image/webp"
+
+},
+
+{
+
+"src": "icon-512x512.webp",
+
+"sizes": "512x512",
+
+"type": "image/webp"
+
+}
+
+]
+
+}
